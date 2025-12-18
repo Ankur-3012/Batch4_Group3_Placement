@@ -1,7 +1,6 @@
 import java.sql.*;
 import java.util.Scanner;
 
-
 class DBConnection {
     protected Connection con;
     protected Statement st;
@@ -16,14 +15,13 @@ class DBConnection {
     }
 }
 
-
 interface TravelOperations {
     void addCustomer();
     void createBooking();
     void displayRecords();
+    void updateRecord();
     void deleteRecord();
 }
-
 
 class TravelService extends DBConnection implements TravelOperations {
 
@@ -32,7 +30,6 @@ class TravelService extends DBConnection implements TravelOperations {
     TravelService() throws Exception {
         super();
     }
-
 
     public void addCustomer() {
         try {
@@ -50,7 +47,7 @@ class TravelService extends DBConnection implements TravelOperations {
             System.out.print("Enter Phone: ");
             String phone = sc.nextLine();
 
-            st.executeUpdate("INSERT INTO customers(customer_id, name, age, phone) VALUES (" + customerId + ",'" + name + "'," + age + ",'" + phone + "')");
+            st.executeUpdate("INSERT INTO customers(customer_id, name, age, phone) VALUES (" +customerId + ",'" + name + "'," + age + ",'" + phone + "')");
             System.out.println("Customer Added");
 
         } 
@@ -68,14 +65,11 @@ class TravelService extends DBConnection implements TravelOperations {
             int customerId = sc.nextInt();
             sc.nextLine();
 
-            ResultSet rs = st.executeQuery(
-                "SELECT package_id, destination FROM packages"
-            );
+            ResultSet rs = st.executeQuery("SELECT package_id, destination FROM packages");
 
             System.out.println("Available Packages:");
             while (rs.next()) {
-                System.out.println(rs.getInt("package_id") + ". " + rs.getString("destination")
-                );
+            System.out.println(rs.getInt("package_id") + ". " + rs.getString("destination"));
             }
 
             System.out.print("Choose Package ID: ");
@@ -90,11 +84,12 @@ class TravelService extends DBConnection implements TravelOperations {
 
             System.out.println("Price: " + price);
             System.out.println("Duration: " + duration + " days");
+
             System.out.print("Enter Travel Date (YYYY-MM-DD): ");
             String travelDate = sc.nextLine();
 
-            st.executeUpdate( "INSERT INTO bookings(booking_id, customer_id, package_id, travel_date, status) VALUES (" +
-            bookingId + "," + customerId + "," + packageId + ",'" + travelDate + "','CONFIRMED')");
+            st.executeUpdate("INSERT INTO bookings(booking_id, customer_id, package_id, travel_date, status) VALUES (" +bookingId + "," + customerId 
+            + "," + packageId + ",'" + travelDate + "','CONFIRMED')");
 
             System.out.print("Enter Payment ID: ");
             int paymentId = sc.nextInt();
@@ -103,8 +98,8 @@ class TravelService extends DBConnection implements TravelOperations {
             System.out.print("Enter Payment Mode (Cash/Card/UPI): ");
             String mode = sc.nextLine();
 
-            st.executeUpdate("INSERT INTO payments(payment_id, booking_id, amount, payment_mode) VALUES (" + paymentId + "," + bookingId + "," + price + ",'" + mode + "')");
-
+            st.executeUpdate("INSERT INTO payments(payment_id, booking_id, amount, payment_mode) VALUES (" +
+                paymentId + "," + bookingId + "," + price + ",'" + mode + "')");
             System.out.println("Booking Completed");
 
         } 
@@ -113,29 +108,69 @@ class TravelService extends DBConnection implements TravelOperations {
         }
     }
 
- public void displayRecords() {
-    try {
-        ResultSet rs = st.executeQuery(
-            "SELECT c.customer_id, c.name, b.travel_date, p.destination, p.duration, pay.amount, pay.payment_mode " +
-            "FROM customers c " + "INNER JOIN bookings b ON c.customer_id=b.customer_id " +"INNER JOIN packages p ON b.package_id=p.package_id " +
-            "INNER JOIN payments pay ON b.booking_id=pay.booking_id");
-
-        System.out.println("Customer_ID | Name | Travel_Date | Destination | Days | Amount | Mode");
-
-        while (rs.next()) {
-            System.out.println(
-                rs.getInt(1) + " | " + rs.getString(2) + " | " +
-                rs.getDate(3) + " | " + rs.getString(4) + " | " +
-                rs.getInt(5) + " | " + rs.getInt(6) + " | " +
-                rs.getString(7)
+    public void displayRecords() {
+        try {
+            ResultSet rs = st.executeQuery(
+                "SELECT c.customer_id, c.name, c.age, c.phone, b.booking_id, b.travel_date, " +
+                "p.destination, p.duration, pay.amount, pay.payment_mode " +
+                "FROM customers c " +
+                "INNER JOIN bookings b ON c.customer_id=b.customer_id " +
+                "INNER JOIN packages p ON b.package_id=p.package_id " +
+                "INNER JOIN payments pay ON b.booking_id=pay.booking_id"
             );
+
+            System.out.println("Customer ID | Name | Age | Phone | Booking ID | Date | Destination | Days | Amount | Mode");
+
+            while (rs.next()) {
+                System.out.println(
+                    rs.getInt(1) + " | " + rs.getString(2) + " | " +
+                    rs.getInt(3) + " | " + rs.getString(4) + " | " +
+                    rs.getInt(5) + " | " + rs.getDate(6) + " | " +
+                    rs.getString(7) + " | " + rs.getInt(8) + " | " +
+                    rs.getInt(9) + " | " + rs.getString(10)
+                );
+            }
+
+        } 
+        catch (Exception e) {
+            e.printStackTrace();
         }
-    } catch (Exception e) {
-        e.printStackTrace();
     }
-}
 
+    public void updateRecord() {
+        try {
+            System.out.print("Enter Customer ID: ");
+            int customerId = sc.nextInt();
+            sc.nextLine();
 
+            System.out.print("Enter New Name: ");
+            String name = sc.nextLine();
+
+            System.out.print("Enter New Age: ");
+            int age = sc.nextInt();
+            sc.nextLine();
+
+            System.out.print("Enter New Phone: ");
+            String phone = sc.nextLine();
+
+            st.executeUpdate("UPDATE customers SET name='" + name + "', age=" + age + ", phone='" + phone + "' WHERE customer_id=" + customerId);
+
+            System.out.print("Enter Booking ID to update travel date: ");
+            int bookingId = sc.nextInt();
+            sc.nextLine();
+
+            System.out.print("Enter New Travel Date (YYYY-MM-DD): ");
+            String newDate = sc.nextLine();
+
+            st.executeUpdate("UPDATE bookings SET travel_date='" + newDate + "' WHERE booking_id=" + bookingId);
+
+            System.out.println("Record Updated Successfully");
+
+        } 
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     public void deleteRecord() {
         try {
@@ -148,7 +183,8 @@ class TravelService extends DBConnection implements TravelOperations {
 
             System.out.println("Record Deleted");
 
-        } catch (Exception e) {
+        } 
+        catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -159,48 +195,47 @@ public class ToursAndTravelsApp {
         Scanner sc = new Scanner(System.in);
         try {
             TravelOperations service = new TravelService();
+
             while (true) {
                 System.out.println("\n    TOURS & TRAVEL MENU    ");
                 System.out.println("1. Add Customer");
                 System.out.println("2. Create Booking");
                 System.out.println("3. Display Records");
                 System.out.println("4. Delete Record");
-                System.out.println("5. Exit");
+                System.out.println("5. Update Record");
+                System.out.println("6. Exit");
                 System.out.print("Choice: ");
 
                 int ch = sc.nextInt();
 
                 switch (ch) {
-                            case 1:
-                                service.addCustomer();
-                                break;
-
-                             case 2:
-                                service.createBooking();
-                                break;
-
-                            case 3:
-                                service.displayRecords();
-                                break;
-
-                            case 4:
-                                service.deleteRecord();
-                                break;
-
-                            case 5:
-                                System.exit(0);
-
-                            default:
-                                System.out.println("Invalid Choice");
-                            }
-
+                    case 1: 
+                    service.addCustomer(); 
+                    break;
+                    case 2: 
+                    service.createBooking(); 
+                    break;
+                    case 3: 
+                    service.displayRecords(); 
+                    break;
+                    case 4: 
+                    service.deleteRecord(); 
+                    break;
+                    case 5: 
+                    service.updateRecord(); 
+                    break;
+                    case 6: 
+                    System.exit(0);
+                    default: 
+                    System.out.println("Invalid Choice");
+                }
             }
 
         } 
         catch (Exception e) {
             e.printStackTrace();
         }
-        finally{
+        finally {
             sc.close();
         }
     }
